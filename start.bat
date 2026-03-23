@@ -1,59 +1,56 @@
 @echo off
 
-REM Simple Image Editor System Start Script
+REM 图像编辑系统启动脚本 (Windows)
 
 cls
-echo Image Editor System
- echo ===================
-echo Starting system...
+echo ==================================
+echo    图像编辑系统启动脚本
+echo ==================================
 echo.
 
-REM Check if we're in the correct directory
-echo Current directory: %cd%
-echo.
-
-REM Check if required directories exist
+REM 检查前端目录
 if not exist "frontend" (
-    echo Error: Frontend directory not found
-    echo Please make sure you are in the correct directory
-    echo Press any key to exit...
+    echo 错误: 前端目录不存在
     pause
     exit /b 1
 )
 
+REM 检查或创建虚拟环境
 if not exist "venv" (
-    echo Error: Virtual environment not found
-    echo Please create virtual environment first
-    echo Press any key to exit...
-    pause
-    exit /b 1
+    echo [1/5] 创建虚拟环境...
+    python -m venv venv
+) else (
+    echo [1/5] 虚拟环境已存在...
 )
 
-REM Initialize database
-echo Initializing database...
-echo 1. Creating database if not exists...
-venv\Scripts\python.exe app\db\create_db.py
-echo.
-echo 2. Initializing database tables...
-venv\Scripts\python.exe app\db\init_db.py
-echo.
+echo [2/5] 激活虚拟环境并安装依赖...
+call venv\Scripts\activate.bat
+pip install -r requirements.txt -q
 
-REM Try to start backend directly
-echo Starting Flask backend...
+echo [3/5] 初始化数据库...
+python app\db\create_db.py
+python app\db\init_db.py
+
+echo [4/5] 安装前端依赖...
+cd frontend
+if not exist "node_modules" (
+    call npm install
+)
+cd ..
+
+echo [5/5] 启动服务...
+echo.
+echo 启动后端服务...
 start "Flask Backend" cmd /k "venv\Scripts\python.exe -m flask run --host=localhost"
-echo Backend started in new window
-echo.
 
-REM Try to start frontend development server directly
-echo Starting Vue frontend development server...
-start "Vue Frontend" cmd /k "cd frontend && npm run dev"
-echo Frontend started in new window
-echo.
+echo 启动前端开发服务器...
+start "Vue Frontend" cmd /k "cd frontend ^&^& npm run dev"
 
-REM Display success message
-echo System started!
-echo Backend: http://localhost:5000
-echo Frontend: http://localhost:5173
 echo.
-echo Press any key to exit...
+echo ==================================
+echo 系统已启动!
+echo 后端地址: http://localhost:5000
+echo 前端地址: http://localhost:5173
+echo ==================================
+echo.
 pause
