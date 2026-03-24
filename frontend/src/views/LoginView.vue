@@ -64,6 +64,8 @@
 <script>
 import axios from 'axios'
 
+const API_BASE = 'http://47.121.190.137:5000'
+
 export default {
   name: 'LoginView',
   data() {
@@ -89,7 +91,7 @@ export default {
       this.message = ''
       
       try {
-        const response = await axios.post('http://localhost:5000/api/login', this.loginForm, {
+        const response = await axios.post('http://47.121.190.137:5000/api/login', this.loginForm, {
           withCredentials: true
         })
         this.message = response.data.message
@@ -114,7 +116,7 @@ export default {
       this.message = ''
       
       try {
-        const response = await axios.post('http://localhost:5000/api/register', this.registerForm, {
+        const response = await axios.post('http://47.121.190.137:5000/api/register', this.registerForm, {
           withCredentials: true
         })
         this.message = response.data.message

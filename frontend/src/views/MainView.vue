@@ -182,7 +182,7 @@ export default {
   methods: {
     async logout() {
       try {
-        await axios.get('http://localhost:5000/api/logout')
+        await axios.get('http://47.121.190.137:5000/api/logout')
         localStorage.removeItem('user')
         this.$router.push('/')
       } catch (error) {
@@ -205,7 +205,7 @@ export default {
           api_choice: this.generateForm.apiChoice
         })
         
-        const response = await axios.post('http://localhost:5000/api/generate', {
+        const response = await axios.post('http://47.121.190.137:5000/api/generate', {
           prompt: this.generateForm.prompt,
           api_choice: this.generateForm.apiChoice
         }, {
@@ -267,7 +267,7 @@ export default {
       this.logs = []
       
       try {
-        const response = await axios.post('http://localhost:5000/api/edit', {
+        const response = await axios.post('http://47.121.190.137:5000/api/edit', {
           image: this.uploadedImage,
           prompt: this.editForm.prompt,
           api_choice: this.editForm.apiChoice
