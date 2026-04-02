@@ -102,7 +102,7 @@ export default {
   methods: {
     async logout() {
       try {
-        await axios.get('http://localhost:5000/api/logout')
+        await axios.get('http://47.121.190.137:5000/api/logout')
         localStorage.removeItem('user')
         this.$router.push('/')
       } catch (error) {
@@ -114,7 +114,7 @@ export default {
       this.error = ''
       
       try {
-        const response = await axios.get('http://localhost:5000/api/admin/users')
+        const response = await axios.get('http://47.121.190.137:5000/api/admin/users')
         this.users = response.data.users
       } catch (error) {
         console.error('Load users error:', error)
@@ -127,7 +127,7 @@ export default {
       this.isUpdating = userId
       
       try {
-        await axios.put(`http://localhost:5000/api/admin/users/${userId}`, {
+        await axios.put(`http://47.121.190.137:5000/api/admin/users/${userId}`, {
           is_active: isActive
         })
         // 重新加载用户列表

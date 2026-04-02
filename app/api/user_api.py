@@ -78,3 +78,8 @@ def update_user(user_id):
     
     db.session.commit()
     return jsonify({'message': 'User updated successfully'}), 200
+@user_bp.route('/api/login', methods=['GET'])
+def get_login_status():
+    if current_user.is_authenticated:
+        return jsonify({'user': {'username': current_user.username, 'is_admin': current_user.is_admin}}), 200
+    return jsonify({}), 200

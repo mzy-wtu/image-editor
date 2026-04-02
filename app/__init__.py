@@ -10,7 +10,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-CORS(app, origins=['http://localhost:5173'], supports_credentials=True)
+CORS(app, origins=['http://localhost:5173', 'http://47.121.190.137:5173', 'http://47.121.190.137:5000', 'http://172.24.199.66:5173'], supports_credentials=True)
 
 db = SQLAlchemy(app)
 
