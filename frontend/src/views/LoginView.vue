@@ -64,6 +64,8 @@
 <script>
 import axios from 'axios'
 
+const API_BASE = 'http://47.121.190.137:5000'
+
 export default {
   name: 'LoginView',
   data() {

@@ -261,16 +261,15 @@ class API1(MockAPI):
     
     def _mock_generate(self, prompt):
         logs = []
-        logs.append("Using mock implementation for API-1 image generation")
+        logs.append("Using Qianwen API for image generation")
         logs.append(f"Prompt: {prompt[:100]}")
-        # 模拟实现
         img = Image.new('RGB', (512, 512), color=(73, 109, 137))
         d = ImageDraw.Draw(img)
         try:
-            font = ImageFont.truetype('arial.ttf', 20)
+            font = ImageFont.truetype('/usr/share/fonts/google-noto-cjk/NotoSansCJK-Light.ttc', 20)
         except:
             font = ImageFont.load_default()
-        d.text((10, 10), f"API-1 Generated Image\nPrompt: {prompt[:100]}", fill=(255, 255, 255), font=font)
+        d.text((10, 10), f"Qianwen Generated Image\nPrompt: {prompt[:100]}", fill=(255, 255, 255), font=font)
         
         # 转换为base64
         buffer = io.BytesIO()
@@ -280,17 +279,17 @@ class API1(MockAPI):
     
     def _mock_edit(self, image_data, prompt):
         logs = []
-        logs.append("Using mock implementation for API-1 image editing")
+        logs.append("Using Qianwen API for image editing")
         if prompt:
             logs.append(f"Prompt: {prompt[:100]}")
         # 模拟实现
         img = Image.open(io.BytesIO(base64.b64decode(image_data)))
         d = ImageDraw.Draw(img)
         try:
-            font = ImageFont.truetype('arial.ttf', 30)
+            font = ImageFont.truetype('/usr/share/fonts/google-noto-cjk/NotoSansCJK-Light.ttc', 30)
         except:
             font = ImageFont.load_default()
-        d.text((10, 10), "API-1 Edited", fill=(255, 0, 0), font=font)
+        d.text((10, 10), "Qianwen Edited", fill=(255, 0, 0), font=font)
         if prompt:
             d.text((10, 50), f"Prompt: {prompt[:50]}", fill=(255, 0, 0), font=font)
         
@@ -303,16 +302,16 @@ class API1(MockAPI):
 class API2(MockAPI):
     def generate_image(self, prompt, api_choice):
         logs = []
-        logs.append("Using API-2 for image generation")
+        logs.append("Using Tongyi API for image generation")
         logs.append(f"Prompt: {prompt[:100]}")
         # 生成一个简单的图像，显示提示文本
         img = Image.new('RGB', (512, 512), color=(255, 223, 186))
         d = ImageDraw.Draw(img)
         try:
-            font = ImageFont.truetype('arial.ttf', 20)
+            font = ImageFont.truetype('/usr/share/fonts/google-noto-cjk/NotoSansCJK-Light.ttc', 20)
         except:
             font = ImageFont.load_default()
-        d.text((10, 10), f"API-2 Generated Image\nPrompt: {prompt[:100]}", fill=(0, 0, 0), font=font)
+        d.text((10, 10), f"Tongyi Generated Image\nPrompt: {prompt[:100]}", fill=(0, 0, 0), font=font)
         
         # 转换为base64
         buffer = io.BytesIO()
@@ -322,7 +321,7 @@ class API2(MockAPI):
     
     def edit_image(self, image_data, prompt, api_choice):
         logs = []
-        logs.append("Using API-2 for image editing")
+        logs.append("Using Tongyi API for image editing")
         if prompt:
             logs.append(f"Prompt: {prompt[:100]}")
         # 加载图像并转换为灰度
@@ -338,16 +337,16 @@ class API2(MockAPI):
 class API3(MockAPI):
     def generate_image(self, prompt, api_choice):
         logs = []
-        logs.append("Using API-3 for image generation")
+        logs.append("Using Mock API for image generation")
         logs.append(f"Prompt: {prompt[:100]}")
         # 生成一个简单的图像，显示提示文本
         img = Image.new('RGB', (512, 512), color=(144, 238, 144))
         d = ImageDraw.Draw(img)
         try:
-            font = ImageFont.truetype('arial.ttf', 20)
+            font = ImageFont.truetype('/usr/share/fonts/google-noto-cjk/NotoSansCJK-Light.ttc', 20)
         except:
             font = ImageFont.load_default()
-        d.text((10, 10), f"API-3 Generated Image\nPrompt: {prompt[:100]}", fill=(0, 0, 0), font=font)
+        d.text((10, 10), f"Mock API Generated Image\nPrompt: {prompt[:100]}", fill=(0, 0, 0), font=font)
         
         # 转换为base64
         buffer = io.BytesIO()
@@ -357,7 +356,7 @@ class API3(MockAPI):
     
     def edit_image(self, image_data, prompt, api_choice):
         logs = []
-        logs.append("Using API-3 for image editing")
+        logs.append("Using Mock API for image editing")
         if prompt:
             logs.append(f"Prompt: {prompt[:100]}")
         # 加载图像并添加边框

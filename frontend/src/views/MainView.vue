@@ -49,9 +49,9 @@
         <div class="input-group">
           <label for="api-choice">选择API</label>
           <select id="api-choice" v-model="generateForm.apiChoice">
-            <option value="API-1">API-1</option>
-            <option value="API-2">API-2</option>
-            <option value="API-3">API-3</option>
+            <option value="API-1">千问</option>
+            <option value="API-2">通义</option>
+            <option value="API-3">模拟API</option>
           </select>
         </div>
         <button 
@@ -93,9 +93,9 @@
         <div class="input-group">
           <label for="edit-api-choice">选择API</label>
           <select id="edit-api-choice" v-model="editForm.apiChoice">
-            <option value="API-1">API-1</option>
-            <option value="API-2">API-2</option>
-            <option value="API-3">API-3</option>
+            <option value="API-1">千问</option>
+            <option value="API-2">通义</option>
+            <option value="API-3">模拟API</option>
           </select>
         </div>
         <button 
