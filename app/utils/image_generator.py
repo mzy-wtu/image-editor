@@ -3,10 +3,10 @@ from PIL import Image, ImageDraw, ImageFont
 import io
 
 class MockAPI:
-    def generate_image(self, prompt, api_choice):
+    def generate_image(self, prompt, api_choice, size="1024*1536", negative_prompt="", seed=None):
         pass
     
-    def edit_image(self, image_data, prompt, api_choice):
+    def edit_image(self, image_data, prompt, api_choice, size="1024*1536", negative_prompt="", seed=None):
         pass
 
 class API1(MockAPI):
@@ -34,7 +34,7 @@ class API1(MockAPI):
             print("DashScope SDK not installed, using mock API instead")
             self.available = False
     
-    def generate_image(self, prompt, api_choice):
+    def generate_image(self, prompt, api_choice, size="1024*1536", negative_prompt="", seed=None):
         logs = []
         if not self.available:
             # 回退到模拟实现
@@ -55,17 +55,23 @@ class API1(MockAPI):
             ]
             
             # 调用千问万象API进行文生图
-            response = self.MultiModalConversation.call(
-                api_key=self.api_key,
-                model="qwen-image-2.0-pro",
-                messages=messages,
-                stream=False,
-                n=1,
-                watermark=False,
-                negative_prompt=" ",
-                prompt_extend=True,
-                size="1024*1536",
-            )
+            api_params = {
+                "api_key": self.api_key,
+                "model": "qwen-image-2.0-pro",
+                "messages": messages,
+                "stream": False,
+                "n": 1,
+                "watermark": False,
+                "negative_prompt": negative_prompt if negative_prompt else " ",
+                "prompt_extend": True,
+                "size": size,
+            }
+            
+            # 添加随机种子（如果提供）
+            if seed is not None:
+                api_params["seed"] = int(seed)
+            
+            response = self.MultiModalConversation.call(**api_params)
             
             if response.status_code == 200:
                 # 查看完整响应
@@ -146,7 +152,7 @@ class API1(MockAPI):
             logs.extend(mock_logs)
             return mock_result, logs
     
-    def edit_image(self, image_data, prompt, api_choice):
+    def edit_image(self, image_data, prompt, api_choice, size="1024*1536", negative_prompt="", seed=None):
         logs = []
         if not self.available:
             # 回退到模拟实现
@@ -168,17 +174,22 @@ class API1(MockAPI):
             ]
             
             # 调用千问万象API进行图像编辑
-            response = self.MultiModalConversation.call(
-                api_key=self.api_key,
-                model="qwen-image-2.0-pro",
-                messages=messages,
-                stream=False,
-                n=1,
-                watermark=False,
-                negative_prompt=" ",
-                prompt_extend=True,
-                size="1024*1536",
-            )
+            api_params = {
+                "api_key": self.api_key,
+                "model": "qwen-image-2.0-pro",
+                "messages": messages,
+                "stream": False,
+                "n": 1,
+                "watermark": False,
+                "negative_prompt": negative_prompt if negative_prompt else " ",
+                "prompt_extend": True,
+                "size": size,
+            }
+            
+            if seed is not None:
+                api_params["seed"] = int(seed)
+            
+            response = self.MultiModalConversation.call(**api_params)
             
             if response.status_code == 200:
                 # 查看完整响应
@@ -300,7 +311,7 @@ class API1(MockAPI):
         return f"data:image/png;base64,{img_str}", logs
 
 class API2(MockAPI):
-    def generate_image(self, prompt, api_choice):
+    def generate_image(self, prompt, api_choice, size="1024*1536", negative_prompt="", seed=None):
         logs = []
         logs.append("Using Tongyi API for image generation")
         logs.append(f"Prompt: {prompt[:100]}")
@@ -319,7 +330,7 @@ class API2(MockAPI):
         img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
         return f"data:image/png;base64,{img_str}", logs
     
-    def edit_image(self, image_data, prompt, api_choice):
+    def edit_image(self, image_data, prompt, api_choice, size="1024*1536", negative_prompt="", seed=None):
         logs = []
         logs.append("Using Tongyi API for image editing")
         if prompt:
@@ -335,7 +346,7 @@ class API2(MockAPI):
         return f"data:image/png;base64,{img_str}", logs
 
 class API3(MockAPI):
-    def generate_image(self, prompt, api_choice):
+    def generate_image(self, prompt, api_choice, size="1024*1536", negative_prompt="", seed=None):
         logs = []
         logs.append("Using Mock API for image generation")
         logs.append(f"Prompt: {prompt[:100]}")
@@ -354,7 +365,7 @@ class API3(MockAPI):
         img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
         return f"data:image/png;base64,{img_str}", logs
     
-    def edit_image(self, image_data, prompt, api_choice):
+    def edit_image(self, image_data, prompt, api_choice, size="1024*1536", negative_prompt="", seed=None):
         logs = []
         logs.append("Using Mock API for image editing")
         if prompt:
