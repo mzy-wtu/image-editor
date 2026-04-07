@@ -8,14 +8,15 @@
 - **文生图**：通过文本描述生成图像
 - **图像编辑**：上传图片并进行编辑
 - **管理员功能**：管理用户列表，禁用/启用用户
-- **大模型API**：提供千问、通义和模拟API三种选择
+- **大模型API**：支持千问、通义万相和模拟API
 
 ## 技术栈
 
-- **后端**：Python, Flask, Flask-Login, Flask-CORS, Flask-SQLAlchemy
+- **后端**：Python 3.8+, Flask, Flask-Login, Flask-CORS, Flask-SQLAlchemy
 - **前端**：Vue 3, Vite, Vue Router, Axios
-- **数据库**：MySQL
+- **数据库**：SQLite（默认）/ MySQL
 - **图像处理**：Pillow
+- **大模型**：DashScope（阿里云千问）
 
 ## 项目结构
 
@@ -28,18 +29,21 @@ image-editor/
 │   ├── models/             # 数据模型
 │   │   └── user.py         # 用户模型
 │   ├── utils/              # 工具函数
-│   │   └── mock_api.py     # 模拟API实现
+│   │   └── mock_api.py     # API实现（千问/通义/模拟）
 │   ├── db/                 # 数据库脚本
 │   │   ├── init_db.py      # 数据库初始化
 │   │   └── create_db.py    # 数据库创建
+│   ├── static/             # 静态文件（前端构建）
 │   ├── __init__.py         # 应用初始化
 │   ├── config.py           # 配置文件
 │   └── routes.py           # 路由定义
 ├── frontend/               # 前端应用
 │   ├── src/                # 源代码
+│   ├── dist/               # 构建文件
 │   ├── public/             # 公共文件
 │   └── package.json        # 前端依赖
-├── instance/               # 实例文件夹（SQLite备选）
+├── instance/               # 数据库存储
+├── images/                 # 用户上传图像
 ├── requirements.txt        # Python依赖
 ├── .env.example            # 环境变量示例
 ├── start.bat               # Windows启动脚本
@@ -52,58 +56,49 @@ image-editor/
 
 - Python 3.8+
 - Node.js 16+
-- MySQL 5.7+ 或 SQLite（开发用）
+- SQLite（默认）或 MySQL 5.7+
 
 ## 快速部署（Linux云服务器）
 
 ### 1. 安装系统依赖
 
 ```bash
+# CentOS/RHEL/Aliyun Linux
+sudo yum install -y python38 gcc-c++ make
+
 # Ubuntu/Debian
 sudo apt update
-sudo apt install python3-venv python3-pip mysql-server nodejs npm
-
-# CentOS/RHEL
-sudo yum install python3-venv python3-pip mysql-server nodejs npm
+sudo apt install python3-venv python3-pip gcc g++ make
 ```
 
-### 2. 配置MySQL
-
-```bash
-sudo mysql
-```
-
-在MySQL终端中执行：
-
-```sql
-CREATE DATABASE image_editor CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'image_editor'@'localhost' IDENTIFIED BY 'your_password';
-GRANT ALL PRIVILEGES ON image_editor.* TO 'image_editor'@'localhost';
-FLUSH PRIVILEGES;
-EXIT;
-```
-
-### 3. 下载并配置项目
+### 2. 下载并配置项目
 
 ```bash
 git clone https://github.com/mzy-wtu/image-editor.git
 cd image-editor
 ```
 
-### 4. 创建虚拟环境并安装依赖
+### 3. 创建虚拟环境并安装依赖
 
 ```bash
-python3 -m venv venv
+python3.8 -m venv venv
 source venv/bin/activate
+pip install --upgrade pip
 pip install -r requirements.txt
+pip install dashscope  # 阿里云千问SDK
 ```
 
-### 5. 配置环境变量
+### 4. 配置环境变量（可选）
 
 ```bash
 cp .env.example .env
-# 编辑.env文件，修改数据库连接信息
 nano .env
+```
+
+### 5. 初始化数据库
+
+```bash
+python app/db/init_db.py
 ```
 
 ### 6. 构建前端
@@ -113,25 +108,16 @@ cd frontend
 npm install
 npm run build
 cd ..
+cp -r frontend/dist/* app/static/
 ```
 
-### 7. 初始化数据库
+### 7. 启动应用
 
 ```bash
-python app/db/create_db.py
-python app/db/init_db.py
+python -m flask run --host=0.0.0.0 --port=5000
 ```
 
-### 8. 启动应用
-
-```bash
-chmod +x start.sh
-./start.sh
-```
-
-应用将运行在：
-- 后端地址: http://localhost:5000
-- 前端地址: http://localhost:5000
+应用访问地址：http://你的服务器IP:5000
 
 ## 本地开发
 
@@ -158,12 +144,13 @@ cd ..
 
 ### 2. 配置数据库
 
-编辑 `app/config.py` 或创建 `.env` 文件配置数据库连接。
+编辑 `app/config.py` 或创建 `.env` 文件。
+
+默认使用SQLite，无需额外配置。
 
 ### 3. 初始化数据库
 
 ```bash
-python app/db/create_db.py
 python app/db/init_db.py
 ```
 
@@ -177,13 +164,23 @@ start.bat
 ./start.sh
 
 # 或手动启动
-# 终端1: 启动后端
 python -m flask run --host=0.0.0.0
-
-# 终端2: 启动前端热重载
-cd frontend
-npm run dev
 ```
+
+## 配置大模型API
+
+### 千问API（API-1）
+
+1. 获取阿里云DashScope API Key：https://dashscope.console.aliyun.com/
+2. 在 `app/utils/mock_api.py` 中配置：
+
+```python
+self.api_key = os.getenv("DASHSCOPE_API_KEY", "your-api-key")
+```
+
+### 通义万相API（API-2）
+
+在 `app/utils/mock_api.py` 中配置相应的API密钥。
 
 ## 默认账号
 
@@ -208,17 +205,16 @@ npm run dev
 | `/api/generate` | POST | 文生图 |
 | `/api/edit` | POST | 图像编辑 |
 
-## 扩展建议
+## 部署建议
 
-1. **配置API密钥**：在环境变量中配置千问/通义API密钥以使用真实大模型
-2. **添加更多图像处理功能**：如图像修复、超分辨率等
-3. **添加用户图像历史记录**：保存用户生成和编辑的图像
-4. **添加更多管理员功能**：如用户权限管理、API使用统计等
-5. **部署优化**：使用Gunicorn/Nginx进行生产部署
+1. **安全组开放端口**：云服务器需开放5000端口
+2. **CORS配置**：如需跨域访问，在 `app/__init__.py` 中配置
+3. **前端API地址**：前端默认连接 `http://localhost:5000`，部署时需修改为服务器IP
+4. **生产部署**：建议使用Gunicorn + Nginx
 
 ## 注意事项
 
-- 本项目使用的是模拟API，仅用于演示目的
-- 生产环境中，请使用真实的大模型API并加强安全措施
-- 确保MySQL服务已启动，且数据库配置正确
-- 请修改默认管理员密码
+- 默认使用SQLite数据库，无需安装MySQL
+- 千问/通义API需要有效的API密钥才能生成真实图像
+- 生产环境中，请加强安全措施（修改默认密码、使用环境变量等）
+- 请定期备份数据库文件（instance/image_editor.db）
