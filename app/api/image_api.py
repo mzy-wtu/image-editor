@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 import base64
 import io
 from app import db
-from app.utils.mock_api import APIFactory
+from app.utils.image_generator import APIFactory
 from app.models.image_record import ImageRecord
 
 image_bp = Blueprint('image_api', __name__)
