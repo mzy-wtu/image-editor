@@ -14,7 +14,7 @@
 
 - **后端**：Python 3.8+, Flask, Flask-Login, Flask-CORS, Flask-SQLAlchemy
 - **前端**：Vue 3, Vite, Vue Router, Axios
-- **数据库**：SQLite（默认）/ MySQL
+- **数据库**：MySQL（默认）/ SQLite
 - **图像处理**：Pillow
 - **大模型**：DashScope（阿里云千问）
 
@@ -56,7 +56,7 @@ image-editor/
 
 - Python 3.8+
 - Node.js 16+
-- SQLite（默认）或 MySQL 5.7+
+- MySQL 5.7+（默认）或 SQLite
 
 ## 快速部署（Linux云服务器）
 
@@ -146,7 +146,7 @@ cd ..
 
 编辑 `app/config.py` 或创建 `.env` 文件。
 
-默认使用SQLite，无需额外配置。
+默认使用MySQL，需先创建数据库。
 
 ### 3. 初始化数据库
 
@@ -214,7 +214,7 @@ self.api_key = os.getenv("DASHSCOPE_API_KEY", "your-api-key")
 
 ## 注意事项
 
-- 默认使用SQLite数据库，无需安装MySQL
+- 默认使用MySQL数据库，需确保MySQL服务已启动
 - 千问/通义API需要有效的API密钥才能生成真实图像
 - 生产环境中，请加强安全措施（修改默认密码、使用环境变量等）
-- 请定期备份数据库文件（instance/image_editor.db）
+- 如使用MySQL，请定期备份数据库
