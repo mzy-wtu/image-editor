@@ -201,7 +201,7 @@ export default {
   },
   methods: {
     async logout() {
-      await axios.get('http://47.121.190.137:5000/api/logout')
+      await axios.get('/api/logout')
       localStorage.removeItem('user')
       this.$router.push('/')
     },
@@ -211,11 +211,15 @@ export default {
       this.logs = []
       this.generatedImages = []
       try {
-        const response = await axios.post('http://47.121.190.137:5000/api/generate', {
+        const response = await axios.post('/api/generate', {
           prompt: this.generateForm.prompt,
-          api_choice: this.generateForm.apiChoice
+          api_choice: this.generateForm.apiChoice,
+          negativePrompt: this.generateForm.negativePrompt,
+          size: this.generateForm.size,
+          count: parseInt(this.generateForm.count),
+          seed: this.generateForm.seed || null
         })
-        this.generatedImages = [response.data.image]
+        this.generatedImages = response.data.images || (response.data.image ? [response.data.image] : [])
         if (response.data.logs) this.logs = response.data.logs
       } catch (error) {
         alert('生成失败: ' + (error.response?.data?.error || error.message))
@@ -250,7 +254,7 @@ export default {
       this.isEditing = true
       this.logs = []
       try {
-        const response = await axios.post('http://47.121.190.137:5000/api/edit', {
+        const response = await axios.post('/api/edit', {
           image: this.uploadedImage,
           prompt: this.editForm.prompt,
           api_choice: this.editForm.apiChoice
