@@ -167,7 +167,7 @@ export default {
       user: null,
       isDarkTheme: false,
       activeTab: 'generate',
-      generateForm: { prompt: '', negativePrompt: '', apiChoice: 'API-1', size: '1024*1536', count: 1 },
+      generateForm: { prompt: '', negativePrompt: '', apiChoice: 'API-1', size: '1024*1536', count: 1, seed: null },
       editForm: { prompt: '', apiChoice: 'API-1' },
       uploadedImage: null,
       generatedImages: [],

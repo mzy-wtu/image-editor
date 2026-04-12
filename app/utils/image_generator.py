@@ -24,7 +24,11 @@ class API1(MockAPI):
             self.json = json
             
             # 配置API Key
-            self.api_key = os.getenv("DASHSCOPE_API_KEY", "sk-e6387b41fb884c93ba2f7b7d93f4d9d4")
+            self.api_key = os.getenv("DASHSCOPE_API_KEY")
+            if not self.api_key:
+                print("⚠️  DASHSCOPE_API_KEY 未配置，将使用 Mock API")
+                self.available = False
+                return
             
             # 配置API URL - 中国（北京）地域
             self.dashscope.base_http_api_url = 'https://dashscope.aliyuncs.com/api/v1'

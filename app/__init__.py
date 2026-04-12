@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask_login import LoginManager
 from flask_cors import CORS
@@ -10,7 +11,12 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-CORS(app, origins=['http://localhost:5173', 'http://47.121.190.137:5173', 'http://47.121.190.137:5000', 'http://172.24.199.66:5173'], supports_credentials=True)
+# CORS origins: 从环境变量读取，多个用逗号分隔
+_cors_origins = os.environ.get(
+    'ALLOWED_ORIGINS',
+    'http://localhost:5173,http://localhost:5000'
+).split(',')
+CORS(app, origins=_cors_origins, supports_credentials=True)
 
 db = SQLAlchemy(app)
 
