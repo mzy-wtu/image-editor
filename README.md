@@ -1,15 +1,20 @@
 # 图像编辑系统
 
-基于大模型的AI图像生成与编辑Web应用，支持文生图和图像编辑功能，提供现代化UI和高级参数控制。
+基于大模型的AI图像生成与编辑Web应用，支持文生图、多种图像编辑功能，提供现代化UI和高级参数控制。
 
 ## ✨ 功能特点
 
 ### 核心功能
 - **用户管理**：注册、登录、权限控制
 - **文生图**：通过文本描述生成图像，支持批量生成（1-4张）
-- **图像编辑**：上传图片并进行AI编辑
+- **图像编辑（5种模式）**：
+  - 指令编辑：通过文字指令修改图像
+  - 局部重绘：在图像上涂抹区域，AI 重绘指定内容（wanx2.1-imageedit）
+  - 背景生成：为已抠图主体生成新背景（wanx-background-generation-v2）
+  - 人像风格重绘：将人像转换为多种艺术风格（wanx-style-repaint-v1）
+  - 涂鸦作画：在画布上涂鸦，AI 生成完整图像（wanx-sketch-to-image-lite）
 - **管理员功能**：管理用户列表，禁用/启用用户
-- **多模型支持**：千问、通义万相和模拟API
+- **多模型支持**：千问（qwen-image-2.0-pro）、万象Pro（wan2.7-image-pro）、通义、模拟
 
 ### 🎨 前端特性
 - **现代化UI**：渐变背景、毛玻璃效果、圆角卡片设计
@@ -31,7 +36,8 @@
 - **扩展**：Flask-Login, Flask-CORS, Flask-SQLAlchemy
 - **数据库**：MySQL（默认）/ SQLite
 - **图像处理**：Pillow
-- **AI模型**：DashScope（阿里云千问）
+- **AI模型**：DashScope（阿里云千问/万象）
+- **对象存储**：阿里云OSS（oss2，用于wanx API图像中转）
 
 ### 前端
 - **框架**：Vue 3 (Composition API)
@@ -236,6 +242,21 @@ DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxxxxx
    - `seed`: 随机种子（可选）
    - `n`: 生成数量（1-4）
 
+### 阿里云OSS配置（万象API必需）
+
+万象系列API（背景生成、风格重绘、涂鸦作画）需要通过OSS上传图像。
+
+1. 创建OSS Bucket：https://oss.console.aliyun.com/
+2. 设置Bucket为**公共读**权限
+3. 在 `.env` 文件中配置：
+
+```bash
+OSS_ACCESS_KEY_ID=your-access-key-id
+OSS_ACCESS_KEY_SECRET=your-access-key-secret
+OSS_BUCKET=your-bucket-name
+OSS_ENDPOINT=oss-cn-hangzhou.aliyuncs.com
+```
+
 ### 通义万相API
 
 在 `app/utils/image_generator.py` 中配置相应的API密钥。
@@ -262,7 +283,11 @@ DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxxxxx
 | 接口 | 方法 | 描述 | 参数 |
 |------|------|------|------|
 | `/api/generate` | POST | 文生图 | `prompt`, `api_choice`, `count`, `size`, `negativePrompt`, `seed` |
-| `/api/edit` | POST | 图像编辑 | `prompt`, `api_choice`, `image` |
+| `/api/edit` | POST | 指令编辑 | `prompt`, `api_choice`, `image` |
+| `/api/inpaint` | POST | 局部重绘 | `image`, `mask`, `prompt` |
+| `/api/background` | POST | 背景生成 | `image`, `prompt` |
+| `/api/style-repaint` | POST | 人像风格重绘 | `image`, `style_index` |
+| `/api/sketch` | POST | 涂鸦作画 | `image`, `prompt` |
 
 #### `/api/generate` 请求示例
 
@@ -343,11 +368,27 @@ python app/db/migrate_add_params.py
 
 ### 图像编辑流程
 
-1. 点击或拖拽上传图像
-2. 输入编辑指令（如"把背景改成蓝天"）
-3. 选择模型
-4. 点击 **🎨 开始编辑**
-5. 查看原图和编辑后的对比
+选择编辑子模式后操作：
+
+**指令编辑**
+1. 上传图像，输入编辑指令（如"把背景改成蓝天"）
+2. 选择模型，点击 **🎨 开始编辑**
+
+**局部重绘**
+1. 上传图像，在图像上用红色笔刷涂抹要重绘的区域
+2. 输入描述，点击 **🎨 开始重绘**
+
+**背景生成**
+1. 上传已抠图的主体图像（透明背景PNG）
+2. 输入背景描述，点击 **🌄 生成背景**
+
+**人像风格重绘**
+1. 上传人像图像，选择目标风格（12种可选）
+2. 点击 **🎨 开始风格重绘**
+
+**涂鸦作画**
+1. 在画布上绘制简单线条涂鸦
+2. 输入描述，点击 **🖌️ 开始作画**
 
 ### 主题切换
 
@@ -455,6 +496,7 @@ MIT License
 
 **更新日志**
 
+- **2026-04-22**: 新增5种图像编辑模式（局部重绘、背景生成、风格重绘、涂鸦作画），集成阿里云OSS，新增万象Pro模型支持
 - **2026-04-07**: 前端UI现代化改造，添加高级参数支持，实现批量生成功能
 - **2026-04-06**: 修复数据库容量问题，升级为LONGBLOB
 - **初始版本**: 基础文生图和图像编辑功能

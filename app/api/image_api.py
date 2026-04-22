@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 import base64
 import io
 from app import db
-from app.utils.image_generator import APIFactory
+from app.utils.image_generator import APIFactory, WanxAPI
 from app.models.image_record import ImageRecord
 
 image_bp = Blueprint("image_api", __name__)
@@ -12,11 +12,13 @@ image_bp = Blueprint("image_api", __name__)
 @login_required
 def generate_image():
     data = request.get_json()
+    print(f"[API] Received request data: {data}")
     if not data or "prompt" not in data or "api_choice" not in data:
         return jsonify({"error": "Missing required fields"}), 400
     
     prompt = data["prompt"]
     api_choice = data["api_choice"]
+    print(f"[API] api_choice received: {api_choice}")
     
     # 新增：接收高级参数
     count = data.get("count", 1)
@@ -129,8 +131,127 @@ def delete_history(record_id):
     record = ImageRecord.query.filter_by(id=record_id, user_id=current_user.id).first()
     if not record:
         return jsonify({"error": "Record not found"}), 404
-    
+
     db.session.delete(record)
     db.session.commit()
-    
+
     return jsonify({"message": "Record deleted successfully"}), 200
+
+
+@image_bp.route("/api/background", methods=["POST"])
+@login_required
+def background_generation():
+    data = request.get_json()
+    if not data or "image" not in data:
+        return jsonify({"error": "Missing image"}), 400
+
+    image_data = data["image"].split(",")[1]
+    prompt = data.get("prompt", "")
+
+    wanx = APIFactory.get_wanx()
+    result, logs = wanx.background_generation(image_data, prompt)
+
+    if result:
+        original_bytes = base64.b64decode(image_data)
+        result_bytes = base64.b64decode(result.split(",")[1])
+        record = ImageRecord(
+            user_id=current_user.id,
+            image_type="background",
+            prompt=prompt,
+            api_choice="wanx-background",
+            original_image=original_bytes,
+            result_image=result_bytes
+        )
+        db.session.add(record)
+        db.session.commit()
+
+    return jsonify({"image": result, "logs": logs}), 200
+
+
+@image_bp.route("/api/style-repaint", methods=["POST"])
+@login_required
+def style_repaint():
+    data = request.get_json()
+    if not data or "image" not in data:
+        return jsonify({"error": "Missing image"}), 400
+
+    image_data = data["image"].split(",")[1]
+    style_index = data.get("style_index", 0)
+
+    wanx = APIFactory.get_wanx()
+    result, logs = wanx.style_repaint(image_data, style_index)
+
+    if result:
+        original_bytes = base64.b64decode(image_data)
+        result_bytes = base64.b64decode(result.split(",")[1])
+        record = ImageRecord(
+            user_id=current_user.id,
+            image_type="style_repaint",
+            prompt=f"style_index:{style_index}",
+            api_choice="wanx-style-repaint",
+            original_image=original_bytes,
+            result_image=result_bytes
+        )
+        db.session.add(record)
+        db.session.commit()
+
+    return jsonify({"image": result, "logs": logs}), 200
+
+
+@image_bp.route("/api/sketch", methods=["POST"])
+@login_required
+def sketch_to_image():
+    data = request.get_json()
+    if not data or "image" not in data:
+        return jsonify({"error": "Missing image"}), 400
+
+    image_data = data["image"].split(",")[1]
+    prompt = data.get("prompt", "")
+
+    wanx = APIFactory.get_wanx()
+    result, logs = wanx.sketch_to_image(image_data, prompt)
+
+    if result:
+        original_bytes = base64.b64decode(image_data)
+        result_bytes = base64.b64decode(result.split(",")[1])
+        record = ImageRecord(
+            user_id=current_user.id,
+            image_type="sketch",
+            prompt=prompt,
+            api_choice="wanx-sketch",
+            original_image=original_bytes,
+            result_image=result_bytes
+        )
+        db.session.add(record)
+        db.session.commit()
+
+    return jsonify({"image": result, "logs": logs}), 200
+
+
+@image_bp.route("/api/inpaint", methods=["POST"])
+@login_required
+def inpaint():
+    data = request.get_json()
+    if not data or "image" not in data or "mask" not in data:
+        return jsonify({"error": "Missing image or mask"}), 400
+
+    image_data = data["image"].split(",")[1]
+    mask_data = data["mask"].split(",")[1]
+    prompt = data.get("prompt", "")
+
+    wanx = APIFactory.get_wanx()
+    result, logs = wanx.inpaint(image_data, mask_data, prompt)
+
+    if result:
+        record = ImageRecord(
+            user_id=current_user.id,
+            image_type="inpaint",
+            prompt=prompt,
+            api_choice="wanx-x-painting",
+            original_image=base64.b64decode(image_data),
+            result_image=base64.b64decode(result.split(",")[1])
+        )
+        db.session.add(record)
+        db.session.commit()
+
+    return jsonify({"image": result, "logs": logs}), 200

@@ -7,3 +7,4 @@ python-dotenv
 Pillow
 pymysql
 dashscope
+oss2
