@@ -1,48 +1,27 @@
 <template>
   <div class="admin-page">
-    <div class="bg-shapes">
-      <div class="shape shape-1"></div>
-      <div class="shape shape-2"></div>
-    </div>
-    
     <header class="top-navbar">
       <div class="navbar-left">
         <div class="logo-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
+          <AppIcon name="admin" size="20" />
         </div>
         <h1 class="page-title">用户管理</h1>
       </div>
       <div class="navbar-right">
         <button class="nav-btn" @click="$router.push('/main')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
-          </svg>
-          返回主页
+          <AppIcon name="home" size="16" />返回主页
         </button>
         <button class="nav-btn logout" @click="logout">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          注销
+          <AppIcon name="logout" size="16" />注销
         </button>
       </div>
     </header>
-    
+
     <main class="main-content">
       <div class="stats-bar">
         <div class="stat-card">
           <div class="stat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-            </svg>
+            <AppIcon name="user" size="24" />
           </div>
           <div class="stat-info">
             <span class="stat-value">{{ users.length }}</span>
@@ -50,11 +29,8 @@
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon active">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
+          <div class="stat-icon accent">
+            <AppIcon name="check" size="24" />
           </div>
           <div class="stat-info">
             <span class="stat-value">{{ activeCount }}</span>
@@ -63,10 +39,7 @@
         </div>
         <div class="stat-card">
           <div class="stat-icon warning">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-            </svg>
+            <AppIcon name="ban" size="24" />
           </div>
           <div class="stat-info">
             <span class="stat-value">{{ users.length - activeCount }}</span>
@@ -74,18 +47,14 @@
           </div>
         </div>
       </div>
-      
+
       <div class="table-container">
         <div v-if="isLoading" class="loading-state">
           <div class="spinner"></div>
           <p>加载中...</p>
         </div>
         <div v-else-if="error" class="error-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
+          <AppIcon name="alert" size="48" />
           <p>{{ error }}</p>
           <button @click="loadUsers">重试</button>
         </div>
@@ -123,16 +92,24 @@
               <td class="time-cell">{{ user.created_at }}</td>
               <td>
                 <div class="action-buttons">
-                  <button 
+                  <button class="action-btn history" @click="viewUserHistory(user)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    历史
+                  </button>
+                  <button
                     v-if="!user.is_admin"
                     :class="['action-btn', user.is_active ? 'disable' : 'enable']"
                     @click="toggleUserStatus(user.id, !user.is_active)"
                     :disabled="isUpdating === user.id"
                   >
-                    <svg v-if="isUpdating === user.id" class="spinning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg v-if="isUpdating === user.id" class="spinning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                       <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
                     </svg>
-                    <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                       <circle cx="12" cy="12" r="10"/>
                       <polyline v-if="user.is_active" points="4.93 4.93 19.07 19.07"/>
                       <path v-else d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
@@ -148,21 +125,82 @@
         </table>
       </div>
     </main>
+
+    <div v-if="showHistoryModal" class="modal-overlay" @click.self="closeHistoryModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>{{ selectedUser?.username }} - 图像生成历史</h2>
+          <button class="modal-close" @click="closeHistoryModal">
+            <AppIcon name="close" size="20" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <div v-if="historyLoading" class="loading-state">
+            <div class="spinner"></div>
+            <p>加载中...</p>
+          </div>
+          <div v-else-if="historyError" class="error-state">
+            <p>{{ historyError }}</p>
+          </div>
+          <div v-else-if="userImages.length === 0" class="empty-state">
+            <AppIcon name="image" size="48" />
+            <p>暂无图像生成记录</p>
+          </div>
+          <div v-else class="image-grid">
+            <div v-for="img in userImages" :key="img.id" class="image-card">
+              <div class="image-preview" @click="previewImage(img.result_image)">
+                <img v-if="img.result_image" :src="img.result_image" alt="生成图像" />
+                <div v-else class="no-image">无图像</div>
+              </div>
+              <div class="image-info">
+                <div class="image-type">{{ getImageTypeName(img.image_type) }}</div>
+                <div class="image-prompt">{{ img.prompt || '无提示词' }}</div>
+                <div class="image-meta">
+                  <span>{{ img.api_choice }}</span>
+                  <span>{{ img.size }}</span>
+                </div>
+                <div class="image-time">{{ img.created_at }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-if="totalPages > 1" class="modal-footer">
+          <button class="page-btn" :disabled="currentPage <= 1" @click="changePage(currentPage - 1)">上一页</button>
+          <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+          <button class="page-btn" :disabled="currentPage >= totalPages" @click="changePage(currentPage + 1)">下一页</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="previewImageUrl" class="preview-overlay" @click="previewImageUrl = null">
+      <img :src="previewImageUrl" class="preview-image" />
+    </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+import AppIcon from '../components/common/AppIcon.vue'
+import { useToast } from '../components/common/Toast.vue'
 
 export default {
   name: 'AdminView',
+  components: { AppIcon },
   data() {
     return {
       user: null,
       users: [],
       isLoading: false,
       error: '',
-      isUpdating: null
+      isUpdating: null,
+      showHistoryModal: false,
+      selectedUser: null,
+      userImages: [],
+      historyLoading: false,
+      historyError: '',
+      currentPage: 1,
+      totalPages: 1,
+      previewImageUrl: null
     }
   },
   computed: {
@@ -183,6 +221,10 @@ export default {
       this.$router.push('/')
     }
   },
+  setup() {
+    const { show: toast } = useToast()
+    return { toast }
+  },
   methods: {
     async logout() {
       try {
@@ -196,7 +238,6 @@ export default {
     async loadUsers() {
       this.isLoading = true
       this.error = ''
-      
       try {
         const response = await axios.get('/api/admin/users')
         this.users = response.data.users
@@ -209,18 +250,62 @@ export default {
     },
     async toggleUserStatus(userId, isActive) {
       this.isUpdating = userId
-      
       try {
-        await axios.put(`/api/admin/users/${userId}`, {
-          is_active: isActive
-        })
+        await axios.put(`/api/admin/users/${userId}`, { is_active: isActive })
         this.loadUsers()
       } catch (error) {
         console.error('Toggle user status error:', error)
-        alert('操作失败，请稍后重试')
+        this.toast('操作失败，请稍后重试', 'error')
       } finally {
         this.isUpdating = null
       }
+    },
+    async viewUserHistory(user) {
+      this.selectedUser = user
+      this.showHistoryModal = true
+      this.currentPage = 1
+      await this.loadUserImages()
+    },
+    async loadUserImages() {
+      if (!this.selectedUser) return
+      this.historyLoading = true
+      this.historyError = ''
+      try {
+        const response = await axios.get(`/api/admin/users/${this.selectedUser.id}/images`, {
+          params: { page: this.currentPage, per_page: 12 }
+        })
+        this.userImages = response.data.images
+        this.totalPages = response.data.pages
+      } catch (error) {
+        console.error('Load user images error:', error)
+        this.historyError = '加载历史记录失败，请稍后重试'
+      } finally {
+        this.historyLoading = false
+      }
+    },
+    closeHistoryModal() {
+      this.showHistoryModal = false
+      this.selectedUser = null
+      this.userImages = []
+      this.currentPage = 1
+    },
+    async changePage(page) {
+      this.currentPage = page
+      await this.loadUserImages()
+    },
+    getImageTypeName(type) {
+      const types = {
+        'generate': '文生图',
+        'edit': '指令编辑',
+        'inpaint': '局部重绘',
+        'background': '背景生成',
+        'style-repaint': '风格重绘',
+        'sketch': '涂鸦作画'
+      }
+      return types[type] || type
+    },
+    previewImage(url) {
+      this.previewImageUrl = url
     }
   }
 }
@@ -229,175 +314,80 @@ export default {
 <style scoped>
 .admin-page {
   min-height: 100vh;
-  position: relative;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: var(--bg-secondary);
 }
 
-.bg-shapes {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.shape {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(100px);
-  opacity: 0.3;
-}
-
-.shape-1 {
-  width: 600px;
-  height: 600px;
-  background: #764ba2;
-  top: -200px;
-  right: -100px;
-}
-
-.shape-2 {
-  width: 500px;
-  height: 500px;
-  background: #667eea;
-  bottom: -150px;
-  left: -100px;
-}
-
-.top-navbar {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  padding: 16px 30px;
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--accent);
+  border-radius: 8px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  position: relative;
-  z-index: 10;
+  justify-content: center;
+  color: white;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
 }
 
 .navbar-left {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.logo-icon {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo-icon svg {
-  width: 22px;
-  height: 22px;
-  color: white;
-}
-
-.page-title {
-  font-size: 22px;
-  font-weight: 600;
-  margin: 0;
-  color: white;
+  gap: 10px;
 }
 
 .navbar-right {
   display: flex;
-  gap: 12px;
-}
-
-.nav-btn {
-  padding: 10px 18px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-  display: flex;
-  align-items: center;
   gap: 8px;
-  transition: all 0.3s;
-}
-
-.nav-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-.nav-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.nav-btn.logout {
-  background: rgba(255, 100, 100, 0.15);
-  border-color: rgba(255, 100, 100, 0.3);
-  color: #ff6b6b;
-}
-
-.nav-btn.logout:hover {
-  background: rgba(255, 100, 100, 0.25);
 }
 
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 30px;
-  position: relative;
-  z-index: 1;
+  padding: 28px 24px;
 }
 
 .stats-bar {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 30px;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px);
-  border-radius: 16px;
-  padding: 24px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 14px;
 }
 
 .stat-icon {
-  width: 56px;
-  height: 56px;
-  background: rgba(102, 126, 234, 0.2);
-  border-radius: 14px;
+  width: 48px;
+  height: 48px;
+  background: var(--accent-light);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--accent);
 }
 
-.stat-icon svg {
-  width: 28px;
-  height: 28px;
-  color: #667eea;
-}
-
-.stat-icon.active {
-  background: rgba(34, 197, 94, 0.2);
-}
-
-.stat-icon.active svg {
-  color: #22c55e;
+.stat-icon.accent {
+  background: var(--success-bg);
+  color: #16a34a;
 }
 
 .stat-icon.warning {
-  background: rgba(239, 68, 68, 0.2);
-}
-
-.stat-icon.warning svg {
-  color: #ef4444;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .stat-info {
@@ -406,21 +396,21 @@ export default {
 }
 
 .stat-value {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 700;
-  color: white;
+  color: var(--text-primary);
+  line-height: 1.2;
 }
 
 .stat-label {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .table-container {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
@@ -428,38 +418,32 @@ export default {
 .error-state {
   padding: 60px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #667eea;
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
   border-radius: 50%;
-  margin: 0 auto 20px;
-  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+  animation: spin 0.6s linear infinite;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-.error-state svg {
-  width: 48px;
-  height: 48px;
-  color: #ef4444;
-  margin-bottom: 16px;
-}
-
 .error-state button {
-  margin-top: 16px;
-  padding: 10px 20px;
-  background: #667eea;
+  margin-top: 14px;
+  padding: 8px 18px;
+  background: var(--accent);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   color: white;
   cursor: pointer;
+  font-size: 13px;
 }
 
 .user-table {
@@ -468,26 +452,27 @@ export default {
 }
 
 .user-table th {
-  padding: 16px 20px;
+  padding: 12px 18px;
   text-align: left;
   font-weight: 600;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: rgba(0, 0, 0, 0.2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border);
 }
 
 .user-table td {
-  padding: 16px 20px;
+  padding: 14px 18px;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+  font-size: 14px;
 }
 
 .user-table tr:hover td {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-secondary);
 }
 
 .user-table tr:last-child td {
@@ -495,64 +480,65 @@ export default {
 }
 
 .id-cell {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 13px;
 }
 
 .username-cell {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   font-weight: 500;
 }
 
 .avatar {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  background: var(--accent);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
+  color: white;
 }
 
 .role-badge {
-  padding: 4px 10px;
+  padding: 3px 10px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
 }
 
 .role-badge.admin {
-  background: rgba(168, 85, 247, 0.2);
-  color: #a855f7;
+  background: #fef0e0;
+  color: #c98d5f;
 }
 
 .role-badge.user {
-  background: rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
+  background: var(--accent-light);
+  color: var(--accent);
 }
 
 .status-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 3px 10px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
 }
 
 .status-badge.active {
-  background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
+  background: var(--success-bg);
+  color: #16a34a;
 }
 
 .status-badge.inactive {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .status-dot {
@@ -563,76 +549,266 @@ export default {
 }
 
 .time-cell {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 13px;
 }
 
 .action-buttons {
   display: flex;
+  gap: 6px;
 }
 
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
+  gap: 5px;
+  padding: 6px 12px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all var(--transition);
 }
 
-.action-btn svg {
-  width: 14px;
-  height: 14px;
+.action-btn.history {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.action-btn.history:hover {
+  background: var(--accent-subtle);
 }
 
 .action-btn.enable {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
+  background: var(--success-bg);
+  color: #16a34a;
 }
 
 .action-btn.enable:hover {
-  background: rgba(34, 197, 94, 0.3);
+  background: #dcfce7;
 }
 
 .action-btn.disable {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .action-btn.disable:hover {
-  background: rgba(239, 68, 68, 0.3);
+  background: #fee2e2;
 }
 
 .action-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .spinning {
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 .no-action {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 880px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 18px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: var(--text-muted);
+  transition: color var(--transition);
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 22px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-muted);
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.image-card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.image-preview {
+  aspect-ratio: 1;
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition);
+}
+
+.image-preview:hover img {
+  transform: scale(1.05);
+}
+
+.no-image {
+  color: var(--text-muted);
   font-size: 13px;
+}
+
+.image-info {
+  padding: 10px;
+}
+
+.image-type {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.image-prompt {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 6px;
+}
+
+.image-meta {
+  display: flex;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+
+.image-time {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.modal-footer {
+  padding: 14px 22px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-btn {
+  padding: 7px 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all var(--transition);
+}
+
+.page-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-info {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  cursor: pointer;
+}
+
+.preview-image {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  border-radius: var(--radius);
 }
 
 @media (max-width: 768px) {
   .stats-bar {
     grid-template-columns: 1fr;
   }
-  
-  .user-table {
-    font-size: 14px;
-  }
-  
+
   .user-table th,
   .user-table td {
-    padding: 12px;
+    padding: 10px;
+    font-size: 13px;
   }
 }
 </style>

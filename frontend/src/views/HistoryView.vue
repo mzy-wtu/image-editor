@@ -1,65 +1,36 @@
 <template>
   <div class="history-page">
-    <div class="bg-shapes">
-      <div class="shape shape-1"></div>
-      <div class="shape shape-2"></div>
-    </div>
-    
     <header class="top-navbar">
       <div class="navbar-left">
         <div class="logo-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
+          <AppIcon name="history" size="20" />
         </div>
         <h1 class="page-title">图像历史</h1>
       </div>
       <div class="navbar-right">
         <button class="nav-btn" @click="goBack">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
-          </svg>
-          返回主页
+          <AppIcon name="home" size="16" />返回主页
         </button>
         <button class="nav-btn logout" @click="logout">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          注销
+          <AppIcon name="logout" size="16" />注销
         </button>
       </div>
     </header>
-    
+
     <main class="main-content">
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>加载中...</p>
-      </div>
-      
-      <div v-else-if="!records || records.length === 0" class="empty-state">
-        <div class="empty-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <path d="M21 15l-5-5L5 21"/>
-          </svg>
-        </div>
-        <h3>暂无图像记录</h3>
-        <p>去主页生成一些图像吧！</p>
-        <button @click="goBack">开始创作</button>
-      </div>
-      
+      <LoadingSpinner v-if="loading" text="加载中..." />
+
+      <EmptyState
+        v-else-if="!records.length"
+        icon="image" title="暂无图像记录" description="去主页生成一些图像吧！"
+        action-text="开始创作" @action="goBack"
+      />
+
       <div v-else class="history-list">
         <div v-for="record in records" :key="record.id" class="history-card">
           <div class="image-section">
-            <img :src="record.result_image" alt="生成的图像" />
-            <div class="image-type-badge">
-              {{ record.image_type === 'generate' ? '文生图' : '编辑' }}
-            </div>
+            <img :src="record.result_image" alt="生成的图像" loading="lazy" />
+            <span class="image-type-badge">{{ record.image_type === 'generate' ? '文生图' : '编辑' }}</span>
           </div>
           <div class="info-section">
             <div class="info-grid">
@@ -82,38 +53,23 @@
             </div>
             <div class="card-actions">
               <button class="action-btn download" @click="downloadImage(record)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                下载
+                <AppIcon name="download" size="14" />下载
               </button>
               <button class="action-btn delete" @click="deleteRecord(record.id)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                </svg>
-                删除
+                <AppIcon name="delete" size="14" />删除
               </button>
             </div>
           </div>
         </div>
       </div>
-      
+
       <div v-if="totalPages > 1" class="pagination">
         <button :disabled="currentPage <= 1" @click="changePage(currentPage - 1)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-          上一页
+          <AppIcon name="chevron-left" size="16" />上一页
         </button>
         <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
         <button :disabled="currentPage >= totalPages" @click="changePage(currentPage + 1)">
-          下一页
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
+          下一页<AppIcon name="chevron-right" size="16" />
         </button>
       </div>
     </main>
@@ -124,9 +80,14 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import AppIcon from '../components/common/AppIcon.vue'
+import LoadingSpinner from '../components/common/LoadingSpinner.vue'
+import EmptyState from '../components/common/EmptyState.vue'
+import { useToast } from '../components/common/Toast.vue'
 
 export default {
   name: 'HistoryView',
+  components: { AppIcon, LoadingSpinner, EmptyState },
   setup() {
     const router = useRouter()
     const records = ref([])
@@ -134,11 +95,12 @@ export default {
     const currentPage = ref(1)
     const totalPages = ref(1)
     const perPage = 10
-    
+    const { show: toast } = useToast()
+
     const loadHistory = async (page = 1) => {
       loading.value = true
       try {
-        const res = await axios.get('/api/history?page=' + page + '&per_page=' + perPage)
+        const res = await axios.get(`/api/history?page=${page}&per_page=${perPage}`)
         records.value = res.data.records || []
         currentPage.value = res.data.current_page || 1
         totalPages.value = res.data.pages || 1
@@ -149,54 +111,33 @@ export default {
         loading.value = false
       }
     }
-    
-    const changePage = (page) => {
-      loadHistory(page)
-    }
-    
-    const goBack = () => {
-      router.push('/main')
-    }
-    
+
+    const changePage = (page) => loadHistory(page)
+    const goBack = () => router.push('/main')
     const logout = async () => {
-      try {
-        await axios.get('/api/logout')
-      } catch (e) {}
+      try { await axios.get('/api/logout') } catch (e) {}
       router.push('/')
     }
-    
     const downloadImage = (record) => {
       const link = document.createElement('a')
       link.href = record.result_image
-      link.download = 'image_' + record.id + '.png'
+      link.download = `image_${record.id}.png`
       link.click()
     }
-    
     const deleteRecord = async (id) => {
       if (!confirm('确定删除此记录？')) return
       try {
-        await axios.delete('/api/history/' + id)
+        await axios.delete(`/api/history/${id}`)
+        toast('删除成功', 'success')
         loadHistory(currentPage.value)
       } catch (e) {
-        alert('删除失败')
+        toast('删除失败', 'error')
       }
     }
-    
-    onMounted(() => {
-      loadHistory()
-    })
-    
-    return {
-      records,
-      loading,
-      currentPage,
-      totalPages,
-      changePage,
-      goBack,
-      logout,
-      downloadImage,
-      deleteRecord
-    }
+
+    onMounted(() => loadHistory())
+
+    return { records, loading, currentPage, totalPages, changePage, goBack, logout, downloadImage, deleteRecord }
   }
 }
 </script>
@@ -204,246 +145,91 @@ export default {
 <style scoped>
 .history-page {
   min-height: 100vh;
-  position: relative;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: var(--bg-secondary);
 }
 
-.bg-shapes {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.shape {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(100px);
-  opacity: 0.3;
-}
-
-.shape-1 {
-  width: 600px;
-  height: 600px;
-  background: #764ba2;
-  bottom: -200px;
-  left: -100px;
-}
-
-.shape-2 {
-  width: 500px;
-  height: 500px;
-  background: #667eea;
-  top: -150px;
-  right: -100px;
-}
-
-.top-navbar {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  padding: 16px 30px;
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--accent);
+  border-radius: 8px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  position: relative;
-  z-index: 10;
+  justify-content: center;
+  color: white;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
 }
 
 .navbar-left {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.logo-icon {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo-icon svg {
-  width: 22px;
-  height: 22px;
-  color: white;
-}
-
-.page-title {
-  font-size: 22px;
-  font-weight: 600;
-  margin: 0;
-  color: white;
+  gap: 10px;
 }
 
 .navbar-right {
   display: flex;
-  gap: 12px;
-}
-
-.nav-btn {
-  padding: 10px 18px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-  display: flex;
-  align-items: center;
   gap: 8px;
-  transition: all 0.3s;
-}
-
-.nav-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-.nav-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.nav-btn.logout {
-  background: rgba(255, 100, 100, 0.15);
-  border-color: rgba(255, 100, 100, 0.3);
-  color: #ff6b6b;
-}
-
-.nav-btn.logout:hover {
-  background: rgba(255, 100, 100, 0.25);
 }
 
 .main-content {
-  max-width: 1000px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 30px;
-  position: relative;
-  z-index: 1;
-}
-
-.loading-state {
-  text-align: center;
-  padding: 100px 20px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #667eea;
-  border-radius: 50%;
-  margin: 0 auto 24px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.empty-state {
-  text-align: center;
-  padding: 80px 20px;
-}
-
-.empty-icon {
-  width: 120px;
-  height: 120px;
-  margin: 0 auto 24px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.empty-icon svg {
-  width: 60px;
-  height: 60px;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.empty-state h3 {
-  font-size: 24px;
-  color: white;
-  margin-bottom: 10px;
-}
-
-.empty-state p {
-  color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 24px;
-}
-
-.empty-state button {
-  padding: 14px 30px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  border-radius: 12px;
-  color: white;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.empty-state button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  padding: 28px 24px;
 }
 
 .history-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .history-card {
   display: flex;
   gap: 20px;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: all 0.3s;
+  transition: box-shadow var(--transition);
 }
 
 .history-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .image-section {
-  width: 220px;
+  width: 200px;
   flex-shrink: 0;
   position: relative;
+  background: var(--bg-tertiary);
 }
 
 .image-section img {
   width: 100%;
-  height: 220px;
+  height: 200px;
   object-fit: cover;
 }
 
 .image-type-badge {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(10px);
-  border-radius: 8px;
+  top: 10px;
+  left: 10px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 6px;
   font-size: 12px;
   color: white;
 }
 
 .info-section {
   flex: 1;
-  padding: 20px 20px 20px 0;
+  padding: 18px 18px 18px 0;
   display: flex;
   flex-direction: column;
 }
@@ -451,14 +237,14 @@ export default {
 .info-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 14px;
   flex: 1;
 }
 
 .info-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .info-item.full-width {
@@ -466,15 +252,16 @@ export default {
 }
 
 .info-label {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 .info-value {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
 }
 
 .info-value.prompt {
@@ -485,75 +272,67 @@ export default {
 
 .card-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 10px;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  transition: all 0.2s;
-}
-
-.action-btn svg {
-  width: 16px;
-  height: 16px;
+  transition: all var(--transition);
+  background: var(--bg-primary);
 }
 
 .action-btn.download {
-  background: rgba(102, 126, 234, 0.2);
-  color: #667eea;
+  color: var(--accent);
+  border-color: var(--accent-subtle);
 }
 
 .action-btn.download:hover {
-  background: rgba(102, 126, 234, 0.3);
+  background: var(--accent-light);
 }
 
 .action-btn.delete {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  color: var(--danger);
+  border-color: var(--danger-border);
 }
 
 .action-btn.delete:hover {
-  background: rgba(239, 68, 68, 0.3);
+  background: var(--danger-bg);
 }
 
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 20px;
-  margin-top: 40px;
+  gap: 18px;
+  margin-top: 32px;
 }
 
 .pagination button {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-  transition: all 0.3s;
-}
-
-.pagination button svg {
-  width: 18px;
-  height: 18px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: all var(--transition);
 }
 
 .pagination button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .pagination button:disabled {
@@ -562,27 +341,26 @@ export default {
 }
 
 .page-info {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
+  color: var(--text-muted);
+  font-size: 13px;
 }
 
 @media (max-width: 768px) {
   .history-card {
     flex-direction: column;
   }
-  
+  .image-section {
+    width: 100%;
+  }
   .image-section img {
-    height: 200px;
+    height: 180px;
   }
-  
   .info-section {
-    padding: 16px;
+    padding: 14px;
   }
-  
   .info-grid {
     grid-template-columns: 1fr;
   }
-  
   .info-item.full-width {
     grid-column: span 1;
   }

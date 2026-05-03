@@ -1,29 +1,30 @@
 <template>
-  <div class="app">
+  <div id="app-root">
     <router-view />
+    <Toast />
   </div>
 </template>
 
 <script>
+import Toast from './components/common/Toast.vue'
+
 export default {
-  name: 'App'
+  name: 'App',
+  components: { Toast }
 }
 </script>
 
 <style>
-* {
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
-
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f5f5f5;
-  color: #333;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
-
-.app {
+#app-root {
   min-height: 100vh;
 }
 </style>

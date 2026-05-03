@@ -37,3 +37,9 @@ images/
 *.png
 *.jpg
 *.jpeg
+
+# Superpowers
+.superpowers/
+
+# Windows artifacts
+NUL
