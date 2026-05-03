@@ -372,7 +372,9 @@ class API4(MockAPI):
     def __init__(self):
         try:
             import dashscope
+            from dashscope.aigc.image_generation import ImageGeneration
             self.dashscope = dashscope
+            self.ImageGeneration = ImageGeneration
             self.api_key = os.getenv("DASHSCOPE_API_KEY")
             if not self.api_key:
                 self.available = False
@@ -382,51 +384,92 @@ class API4(MockAPI):
         except ImportError:
             self.available = False
 
+    def _extract_image_url(self, response):
+        for choice in response.output.choices:
+            msg = choice.get("message", {}) if isinstance(choice, dict) else getattr(choice, "message", None)
+            if msg is None:
+                continue
+            contents = msg.get("content", []) if isinstance(msg, dict) else getattr(msg, "content", [])
+            for content in contents:
+                if isinstance(content, dict):
+                    if content.get("type") == "image" and "image" in content:
+                        return content["image"]
+                    if "image" in content and not content.get("type"):
+                        return content["image"]
+                elif hasattr(content, 'image'):
+                    return content.image
+        return None
+
+    def _download_result(self, image_url):
+        img_resp = requests.get(image_url, timeout=60)
+        img_resp.raise_for_status()
+        os.makedirs('images', exist_ok=True)
+        path = f"images/{uuid.uuid4()}.png"
+        with open(path, 'wb') as f:
+            f.write(img_resp.content)
+        img_str = base64.b64encode(img_resp.content).decode()
+        return f"data:image/png;base64,{img_str}"
+
     def generate_image(self, prompt, api_choice, size="1024*1024", negative_prompt="", seed=None):
         logs = []
         if not self.available:
             return self._mock_generate(prompt)
         try:
-            from dashscope import MultiModalConversation
+            messages = [{"role": "user", "content": [{"text": prompt}]}]
             params = dict(
                 api_key=self.api_key,
                 model="wan2.7-image-pro",
-                messages=[{"role": "user", "content": [{"text": prompt}]}],
-                stream=False,
-                n=1,
+                messages=messages,
                 watermark=False,
+                n=1,
                 size=size,
             )
-            if negative_prompt:
-                params["negative_prompt"] = negative_prompt
             if seed is not None:
                 params["seed"] = int(seed)
-            rsp = MultiModalConversation.call(**params)
+            rsp = self.ImageGeneration.call(**params)
             logs.append(f"status: {rsp.status_code}")
             if rsp.status_code == 200:
-                image_url = None
-                for content in rsp.output.choices[0].message.content:
-                    if 'image' in content:
-                        image_url = content['image']
-                        break
+                image_url = self._extract_image_url(rsp)
                 if image_url:
-                    img_resp = requests.get(image_url, timeout=60)
-                    img_resp.raise_for_status()
-                    os.makedirs('images', exist_ok=True)
-                    path = f"images/{uuid.uuid4()}.png"
-                    with open(path, 'wb') as f:
-                        f.write(img_resp.content)
-                    img_str = base64.b64encode(img_resp.content).decode()
                     logs.append(f"图像URL: {image_url}")
-                    return f"data:image/png;base64,{img_str}", logs
-            logs.append(rsp.message)
+                    return self._download_result(image_url), logs
+            logs.append(f"code: {rsp.code}, message: {rsp.message}")
             return self._mock_generate(prompt)[0], logs
         except Exception as e:
             logs.append(str(e))
             return self._mock_generate(prompt)[0], logs
 
-    def edit_image(self, image_data, prompt, api_choice, **kwargs):
-        return self._mock_edit(image_data, prompt)
+    def edit_image(self, image_data, prompt, api_choice, size="1024*1024", negative_prompt="", seed=None):
+        logs = []
+        if not self.available:
+            return self._mock_edit(image_data, prompt)
+        try:
+            messages = [{
+                "role": "user",
+                "content": [
+                    {"image": f"data:image/png;base64,{image_data}"},
+                    {"text": prompt if prompt else "编辑图像"}
+                ]
+            }]
+            rsp = self.ImageGeneration.call(
+                api_key=self.api_key,
+                model="wan2.7-image-pro",
+                messages=messages,
+                watermark=False,
+                n=1,
+                size="2K",
+            )
+            logs.append(f"status: {rsp.status_code}")
+            if rsp.status_code == 200:
+                image_url = self._extract_image_url(rsp)
+                if image_url:
+                    logs.append(f"图像URL: {image_url}")
+                    return self._download_result(image_url), logs
+            logs.append(f"code: {rsp.code}, message: {rsp.message}")
+            return self._mock_edit(image_data, prompt)[0], logs
+        except Exception as e:
+            logs.append(str(e))
+            return self._mock_edit(image_data, prompt)[0], logs
 
     def _mock_generate(self, prompt):
         img = Image.new('RGB', (512, 512), color=(30, 30, 60))
