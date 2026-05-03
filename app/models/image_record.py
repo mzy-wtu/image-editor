@@ -7,8 +7,8 @@ class ImageRecord(db.Model):
     image_type = db.Column(db.String(20), nullable=False)
     prompt = db.Column(db.Text, nullable=True)
     api_choice = db.Column(db.String(20), nullable=False)
-    original_image = db.Column(db.LargeBinary, nullable=True)
-    result_image = db.Column(db.LargeBinary, nullable=False)
+    original_image = db.Column(db.LargeBinary(length=(2**32)-1), nullable=True)
+    result_image = db.Column(db.LargeBinary(length=(2**32)-1), nullable=False)
     file_path = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
