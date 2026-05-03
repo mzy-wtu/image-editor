@@ -487,7 +487,9 @@ class WanxAPI:
     def __init__(self):
         try:
             import dashscope
+            from dashscope.aigc.image_generation import ImageGeneration
             self.dashscope = dashscope
+            self.ImageGeneration = ImageGeneration
             self.api_key = os.getenv("DASHSCOPE_API_KEY")
             self.available = bool(self.api_key)
             if self.available:
@@ -504,25 +506,78 @@ class WanxAPI:
             f.write(resp.content)
         return "data:image/png;base64," + base64.b64encode(resp.content).decode()
 
+    def _extract_image_url(self, response):
+        for choice in response.output.choices:
+            msg = choice.get("message", {}) if isinstance(choice, dict) else getattr(choice, "message", None)
+            if msg is None:
+                continue
+            contents = msg.get("content", []) if isinstance(msg, dict) else getattr(msg, "content", [])
+            for content in contents:
+                if isinstance(content, dict):
+                    if content.get("type") == "image" and "image" in content:
+                        return content["image"]
+                    if "image" in content and not content.get("type"):
+                        return content["image"]
+                elif hasattr(content, 'image'):
+                    return content.image
+        return None
+
+    def _mask_to_bbox(self, mask_bytes):
+        img = Image.open(io.BytesIO(mask_bytes)).convert('L')
+        width, height = img.size
+        pixels = img.load()
+        x1, y1, x2, y2 = width, height, 0, 0
+        found = False
+        for y in range(height):
+            for x in range(width):
+                if pixels[x, y] > 128:
+                    found = True
+                    x1 = min(x1, x)
+                    y1 = min(y1, y)
+                    x2 = max(x2, x)
+                    y2 = max(y2, y)
+        if not found:
+            return None
+        x1 = max(0, x1 - 10)
+        y1 = max(0, y1 - 10)
+        x2 = min(width - 1, x2 + 10)
+        y2 = min(height - 1, y2 + 10)
+        return [[x1, y1, x2, y2]]
+
     def inpaint(self, image_data, mask_data, prompt):
         logs = []
         if not self.available:
             return None, ["DASHSCOPE_API_KEY 未配置"]
         try:
-            from dashscope import ImageSynthesis
-            rsp = ImageSynthesis.call(
+            mask_bytes = base64.b64decode(mask_data)
+            bbox = self._mask_to_bbox(mask_bytes)
+            if not bbox:
+                return None, logs + ["未检测到涂抹区域，请重新涂抹"]
+            logs.append(f"bbox: {bbox}")
+
+            messages = [{
+                "role": "user",
+                "content": [
+                    {"image": f"data:image/png;base64,{image_data}"},
+                    {"text": prompt if prompt else "根据描述修改所选区域的内容"}
+                ]
+            }]
+
+            rsp = self.ImageGeneration.call(
                 api_key=self.api_key,
-                model="wanx2.1-imageedit",
-                function="description_edit_with_mask",
-                prompt=prompt or "修复该区域",
-                base_image_url=f"data:image/png;base64,{image_data}",
-                mask_image_url=f"data:image/png;base64,{mask_data}",
+                model="wan2.7-image-pro",
+                messages=messages,
+                watermark=False,
                 n=1,
+                size="2K",
+                bbox_list=[bbox],
             )
             logs.append(f"status: {rsp.status_code}")
             if rsp.status_code == 200:
-                result_url = rsp.output.results[0].url
-                return self._download_to_base64(result_url), logs
+                image_url = self._extract_image_url(rsp)
+                if image_url:
+                    logs.append(f"图像URL: {image_url}")
+                    return self._download_to_base64(image_url), logs
             logs.append(f"code: {rsp.code}, message: {rsp.message}")
             return None, logs
         except Exception as e:
