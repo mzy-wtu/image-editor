@@ -544,7 +544,7 @@ class WanxAPI:
         y2 = min(height - 1, y2 + 10)
         return [[x1, y1, x2, y2]]
 
-    def inpaint(self, image_data, mask_data, prompt):
+    def inpaint(self, image_data, mask_data, prompt, size="1024*1536"):
         logs = []
         if not self.available:
             return None, ["DASHSCOPE_API_KEY 未配置"]
@@ -569,7 +569,7 @@ class WanxAPI:
                 messages=messages,
                 watermark=False,
                 n=1,
-                size="2K",
+                size=size,
                 bbox_list=[bbox],
             )
             logs.append(f"status: {rsp.status_code}")

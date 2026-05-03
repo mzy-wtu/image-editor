@@ -28,6 +28,23 @@
           </label>
         </div>
       </div>
+      <div class="panel-section">
+        <label>图像尺寸</label>
+        <select v-model="form.size" class="input-field">
+          <option value="1024*1024">正方形 1024×1024</option>
+          <option value="1024*1536">竖版 1024×1536</option>
+          <option value="1536*1024">横版 1536×1024</option>
+        </select>
+      </div>
+      <div class="panel-section">
+        <label>生成数量: {{ form.count }}</label>
+        <div class="range-wrapper">
+          <input type="range" v-model.number="form.count" min="1" max="4">
+          <div class="range-dots">
+            <span v-for="i in 4" :key="i" :class="{ active: i <= form.count }">{{ i }}</span>
+          </div>
+        </div>
+      </div>
       <button class="btn-primary" @click="$emit('edit', { type: 'instruct', image: uploadedImage, ...form })" :disabled="loading || !uploadedImage">
         <AppIcon v-if="!loading" name="edit" size="18" />
         <span v-if="loading" class="loading-spinner"></span>
@@ -50,6 +67,23 @@
       <div class="panel-section">
         <label>重绘内容描述</label>
         <textarea v-model="inpaintPrompt" class="input-field" placeholder="例如：一只戴红色眼镜的猫..." rows="3"></textarea>
+      </div>
+      <div class="panel-section">
+        <label>输出尺寸</label>
+        <select v-model="inpaintSize" class="input-field">
+          <option value="1024*1024">正方形 1024×1024</option>
+          <option value="1024*1536">竖版 1024×1536</option>
+          <option value="1536*1024">横版 1536×1024</option>
+        </select>
+      </div>
+      <div class="panel-section">
+        <label>生成数量: {{ inpaintCount }}</label>
+        <div class="range-wrapper">
+          <input type="range" v-model.number="inpaintCount" min="1" max="4">
+          <div class="range-dots">
+            <span v-for="i in 4" :key="i" :class="{ active: i <= inpaintCount }">{{ i }}</span>
+          </div>
+        </div>
       </div>
       <div class="panel-tip">
         <AppIcon name="info" size="14" />
@@ -141,8 +175,10 @@ export default {
   data() {
     return {
       uploadedImage: null,
-      form: { prompt: '', apiChoice: 'API-1' },
+      form: { prompt: '', apiChoice: 'API-1', size: '1024*1536', count: 1 },
       inpaintPrompt: '',
+      inpaintSize: '1024*1536',
+      inpaintCount: 1,
       selectedStyle: 0,
       sketchPrompt: '',
       sketchDrawing: false,
@@ -238,7 +274,7 @@ export default {
       }
       mCtx.putImageData(dst, 0, 0)
       const maskData = maskCanvas.toDataURL('image/png')
-      this.$emit('edit', { type: 'inpaint', image: this.uploadedImage, mask: maskData, prompt: this.inpaintPrompt })
+      this.$emit('edit', { type: 'inpaint', image: this.uploadedImage, mask: maskData, prompt: this.inpaintPrompt, size: this.inpaintSize, count: this.inpaintCount })
     }
   },
   watch: {
@@ -424,5 +460,31 @@ export default {
   height: 100%;
   cursor: crosshair;
   border-radius: var(--radius);
+}
+
+.range-wrapper { padding: 0 4px; }
+
+.range-dots {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.range-dots span {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  border-radius: 50%;
+  font-size: 11px;
+  color: var(--text-muted);
+  transition: all var(--transition);
+}
+
+.range-dots span.active {
+  background: var(--accent);
+  color: white;
 }
 </style>

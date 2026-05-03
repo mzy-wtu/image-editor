@@ -78,33 +78,45 @@ def edit_image():
     data = request.get_json()
     if not data or "image" not in data or "api_choice" not in data:
         return jsonify({"error": "Missing required fields"}), 400
-    
+
     image_data = data["image"].split(",")[1]
     prompt = data.get("prompt", "")
     api_choice = data["api_choice"]
-    
+    count = min(max(1, data.get("count", 1)), 4)
+    size = data.get("size", "1024*1536")
+
+    images = []
+    all_logs = []
+
     api = APIFactory.get_api(api_choice)
-    result = api.edit_image(image_data, prompt, api_choice)
-    if isinstance(result, tuple) and len(result) == 2:
-        edited_image, logs = result
-    else:
-        edited_image, logs = result, []
-    
-    if edited_image:
-        original_bytes = base64.b64decode(image_data)
-        result_bytes = base64.b64decode(edited_image.split(",")[1])
-        record = ImageRecord(
-            user_id=current_user.id,
-            image_type="edit",
-            prompt=prompt,
-            api_choice=api_choice,
-            original_image=original_bytes,
-            result_image=result_bytes
-        )
-        db.session.add(record)
-        db.session.commit()
-    
-    return jsonify({"image": edited_image, "logs": logs}), 200
+    for i in range(count):
+        result = api.edit_image(image_data, prompt, api_choice, size=size)
+        if isinstance(result, tuple) and len(result) == 2:
+            edited_image, logs = result
+        else:
+            edited_image, logs = result, []
+
+        if edited_image:
+            images.append(edited_image)
+            all_logs.extend(logs)
+
+            original_bytes = base64.b64decode(image_data)
+            result_bytes = base64.b64decode(edited_image.split(",")[1])
+            record = ImageRecord(
+                user_id=current_user.id,
+                image_type="edit",
+                prompt=prompt,
+                api_choice=api_choice,
+                original_image=original_bytes,
+                result_image=result_bytes,
+                size=size,
+                generation_count=count
+            )
+            db.session.add(record)
+
+    db.session.commit()
+
+    return jsonify({"images": images, "image": images[0] if images else None, "logs": all_logs}), 200
 
 @image_bp.route("/api/history", methods=["GET"])
 @login_required
@@ -238,20 +250,32 @@ def inpaint():
     image_data = data["image"].split(",")[1]
     mask_data = data["mask"].split(",")[1]
     prompt = data.get("prompt", "")
+    count = min(max(1, data.get("count", 1)), 4)
+    size = data.get("size", "1024*1536")
+
+    images = []
+    all_logs = []
 
     wanx = APIFactory.get_wanx()
-    result, logs = wanx.inpaint(image_data, mask_data, prompt)
+    for i in range(count):
+        result, logs = wanx.inpaint(image_data, mask_data, prompt, size=size)
 
-    if result:
-        record = ImageRecord(
-            user_id=current_user.id,
-            image_type="inpaint",
-            prompt=prompt,
-            api_choice="wanx-x-painting",
-            original_image=base64.b64decode(image_data),
-            result_image=base64.b64decode(result.split(",")[1])
-        )
-        db.session.add(record)
-        db.session.commit()
+        if result:
+            images.append(result)
+            all_logs.extend(logs)
 
-    return jsonify({"image": result, "logs": logs}), 200
+            record = ImageRecord(
+                user_id=current_user.id,
+                image_type="inpaint",
+                prompt=prompt,
+                api_choice="wanx-x-painting",
+                original_image=base64.b64decode(image_data),
+                result_image=base64.b64decode(result.split(",")[1]),
+                size=size,
+                generation_count=count
+            )
+            db.session.add(record)
+
+    db.session.commit()
+
+    return jsonify({"images": images, "image": images[0] if images else None, "logs": all_logs}), 200

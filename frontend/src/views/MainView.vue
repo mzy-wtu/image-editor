@@ -189,8 +189,8 @@ export default {
       this.uploadedImage = payload.image
 
       const endpoints = {
-        instruct: { url: '/api/edit', data: { image: payload.image, prompt: payload.prompt, api_choice: payload.apiChoice } },
-        inpaint: { url: '/api/inpaint', data: { image: payload.image, mask: payload.mask, prompt: payload.prompt } },
+        instruct: { url: '/api/edit', data: { image: payload.image, prompt: payload.prompt, api_choice: payload.apiChoice, size: payload.size, count: payload.count } },
+        inpaint: { url: '/api/inpaint', data: { image: payload.image, mask: payload.mask, prompt: payload.prompt, size: payload.size, count: payload.count } },
         background: { url: '/api/background', data: { image: payload.image, prompt: payload.prompt } },
         style: { url: '/api/style-repaint', data: { image: payload.image, style_index: payload.styleIndex } },
         sketch: { url: '/api/sketch', data: { image: payload.image, prompt: payload.prompt } }
